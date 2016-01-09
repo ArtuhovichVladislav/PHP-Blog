@@ -1,21 +1,16 @@
 <?php
 
-class TxtFileHandler implements Handler
+class txtFileHandler implements Handler
 {
 
     private $file = '../include/storage/posts.txt';
 
-    public function addPost($id, $title, $content, $date)
+    public function addPost($title, $content, $date)
     {
         $id = $this->setId();
         $post = new Post($id, $title, $content, $date);
-        $content .= $post->__createStringForFile();
+        $content = $post->__toString();
         file_put_contents($this->file, $content, FILE_APPEND | LOCK_EX);
-    }
-
-    public function getPosts()
-    {
-        return $this->getPostsHash();
     }
 
     private	function parseFile($data)
@@ -23,37 +18,52 @@ class TxtFileHandler implements Handler
         return explode("~", $data);
     }
 
-    public function getPostsHash()
+    public function getPostsArray()
+    {
+       return $this->parseFile(file_get_contents($this->file));
+    }
+
+    public function getPosts()
     {
         $data = file_get_contents($this->file);
         $postsArray = $this->parseFile($data);
-        $postsHash = null;
-        $i = 0;
         foreach($postsArray as $post){
             list($id, $title, $content, $date) = explode(";", $post);
             if($title!=""){
-                $postsHash[$i] =["id"=> $id, "title"=>$title, "content"=> $content, "date"=> $date];
-                $i++;
+                $posts[] = new Post($id, $title, $content, $date);
             }
         }
-        return $postsHash;
+        return $posts;
     }
 
     public function setId()
     {
         $lastPost =  count($this->getPosts()) - 1;
-        $postsHash = $this->getPostsHash();
-        if(is_null( $postsHash[$lastPost]['id'])){
+        $posts = $this->getPosts();
+        if(!$posts || is_null( $posts[$lastPost]->getId())){
             $nextPostId = 1;
         }
         else
-            $nextPostId = 1 +  $postsHash[$lastPost]['id'];
+            $nextPostId = 1 +  $posts[$lastPost]->getId();
         return $nextPostId;
     }
 
 
-    public function deletePost($id)
-    {}
+    public function deletePost($idDel)
+    {
+        $posts = $this->getPosts();
+
+        foreach($posts as $post){
+            if ($post->getId() == $idDel) {
+                $postForDeleting = $post->__toString();
+            }
+            $data = file_get_contents($this->file);
+            $new_str = str_replace($postForDeleting, "",$data );
+            if($post != null)
+                file_put_contents($this->file, $new_str);
+        }
+
+    }
 
 }
 

@@ -1,6 +1,6 @@
 <?php
 
-class Post
+class Post implements JsonSerializable
 {
     private $id;
     private $title;
@@ -15,9 +15,19 @@ class Post
         $this->date = $date;
     }
 
-    public function __createStringForFile()
+    public function __toString()
     {
         return $this->id.";".$this->title.";".$this->content.";".$this->date."~";
+    }
+
+    function jsonSerialize()
+    {
+        $post['id'] = $this->id;
+        $post['title'] = $this->title;
+        $post['content'] = $this->content;
+        $post['date'] = $this->date;
+
+        return $post;
     }
 
     public function getId()

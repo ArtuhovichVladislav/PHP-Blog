@@ -1,30 +1,34 @@
 <?php
-require_once("Post.php");
-require_once("Handler.php");
-require_once("Storage.php");
-require_once("txtFileHandler.php");
-require_once("JSONHandler.php");
+require_once('../include/autoloader.php');
 
 $storage = Storage::getInstance();
-$storage->setHandler(new TxtFileHandler());
-
-$post = postGet($_GET['id']);
-$posts = getPosts();
+$posts = $storage->readData();
 
 if(isset($_GET['action']))
     $action = $_GET['action'];
 else
     $action = "";
-if($action == "add") {
-    if(!empty($_POST)) {
-        newPost($_POST['title'], $_POST['content']);
-        $posts = getPosts();
+if($action == "add")
+{
+    if(!empty($_POST))
+    {
+        $storage->writeData($_POST['title'], $_POST['content']);
+        $posts = array_reverse($storage->readData());
     }
     require_once("../view/index.html.php");
 }
-else {
+else if($action == "delete")
+{
+    if (isset($_GET['id']))
+        $storage->removeData($_GET['id']);
+
+    $posts =  array_reverse($storage->readData());
     require_once("../view/index.html.php");
-    $posts = getPosts();
+}
+else
+{
+    require_once("../view/index.html.php");
+    $posts =  array_reverse($storage->readData());
 }
 
 ?>

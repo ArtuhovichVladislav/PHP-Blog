@@ -4,7 +4,7 @@ class JSONHandler implements Handler
 {
     private $file = '../include/storage/posts.json';
 
-    public function addPost($id, $title, $content, $date)
+    public function addPost($title, $content, $date)
     {
         $id = $this->setId();
         $post = new Post($id, $title, $content, $date);
@@ -15,32 +15,46 @@ class JSONHandler implements Handler
 
     public function getPosts()
     {
-        // TODO: Implement getPosts() method.
+        $posts = [];
+        $postsJson = $this->readJson();
+
+        for ($i = 0; $i < count($postsJson); $i++) {
+            $posts[] = new Post($postsJson[$i]['id'],
+                $postsJson[$i]['title'],
+                $postsJson[$i]['content'],
+                $postsJson[$i]['date']);
+        }
+        return $posts;
     }
 
     public function deletePost($id)
     {
-        // TODO: Implement deletePost() method.
+        $json = $this->readJson();
+        for ($i = 0; $i < count($json); $i++) {
+            if ($json[$i]['id'] == $id) {
+                array_splice($json, $i, 1);
+                break;
+            }
+        }
+        $this->writeJson($json);
     }
 
     public function setId()
     {
         $lastPost =  count($this->getPosts()) - 1;
-        $postsHash = $this->getPostsHash();
-        if(is_null( $postsHash[$lastPost]['id'])){
+        $posts = $this->getPosts();
+        if(!$posts || is_null( $posts[$lastPost]->getId())){
             $nextPostId = 1;
         }
         else
-            $nextPostId = 1 +  $postsHash[$lastPost]['id'];
+            $nextPostId = 1 +  $posts[$lastPost]->getId();
         return $nextPostId;
     }
 
-    private function writeJson($json)
+    private function writeJson($data)
     {
-        $new_json = json_encode($json);
-        $file = fopen($this->file, 'w+');
-        fwrite($file, $new_json);
-        fclose($file);
+        $json = json_encode($data);
+        file_put_contents($this->file, $json);
     }
 
     private function readJson()

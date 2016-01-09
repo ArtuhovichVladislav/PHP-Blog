@@ -20,13 +20,26 @@ class Storage
     {
         if(null === self::$instance) {
             self::$instance = new self();
+            self::$instance->setHandler();
         }
         return self::$instance;
     }
 
-    public function setHandler($handler)
+    public function setHandler()
     {
-        $this->handler = $handler;
+        switch(Config::$handler){
+            case 'txt':
+                $this->handler = new txtFileHandler();
+                break;
+            case 'json':
+                $this->handler = new JSONHandler();
+                break;
+            case 'db':
+                $this->handler = new mysqlHandler();
+                break;
+            default:
+                $this->handler = new txtFileHandler();
+        }
     }
 
     public function readData()
@@ -34,9 +47,12 @@ class Storage
         return $this->handler->getPosts();
     }
 
-    public function writeData($id, $title,  $content,$data)
+    public function writeData($title, $content)
     {
-        $this->handler->addPost($id, $title,  $content,$data);
+        $postTitle = $title == null ? 'NO_TITLE' : $title;
+        $postContent = $content == null ? 'NO_CONTENT' : $content;
+
+        $this->handler->addPost($postTitle, $postContent, date('m.d.Y H:i', time()));
     }
 
     public function removeData($id)
@@ -44,3 +60,5 @@ class Storage
         $this->handler->deletePost($id);
     }
 }
+
+?>
